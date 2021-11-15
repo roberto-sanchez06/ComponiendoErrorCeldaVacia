@@ -34,6 +34,8 @@ namespace Infraestructure.EmpleadosRepos
             List<Empleado> empleados = (List<Empleado>)FindAll(1);
             foreach (Empleado a in empleados)
             {
+                //le agregue esta linea
+                a.MesesTrabajados++;
                 if (a.Vacaciones.MesesTrabajadosVacaciones == 6)
                 {
                     a.Vacaciones.MesesTrabajadosVacaciones = 1;
@@ -93,6 +95,8 @@ namespace Infraestructure.EmpleadosRepos
             }
             bool exitoso = Delete(e);
             e.Estado = EstadoTrabajador.Inactivo;
+            //esta linea la agregue
+            e.MesesTrabajados = 1;
             despedidosDelMes.Add(e);
             empleadosDespedidos.Add(e);
             return exitoso;
@@ -205,6 +209,7 @@ namespace Infraestructure.EmpleadosRepos
                 Ingreso_Horas_Extras = e.Remuneraciones.IngresoHorasExtras,
                 INSS_Laboral = e.Deducciones.INSSLaboral,
                 IR = e.Deducciones.IR,
+                //TODO: se usa datos.count es decir los empleados activos, no los que estan en la nomina
                 INSS_Patronal = empresaService.CalculateInssPatronal(e.Remuneraciones.TotalIngresos, datos.Count),
                 //TODO: el calculo del INATEC lo tienen todos los empleados
                 INATEC = empresaService.CalculateInatec(SalarioTrabajadores),
@@ -225,13 +230,15 @@ namespace Infraestructure.EmpleadosRepos
         //TODO: Mejorar este método
         public EmpleadoDgv[] GetResumenEmpleados(int mes)
         {
-            if (FindAll(3).Count==0)
+            //TODO: modifique todos los findAll sueltos y los almacene en empleados
+            var empleados = FindAll(3);
+            if (empleados.Count==0)
             {
                 return null;
             }
-            EmpleadoDgv[] empleadosDgv = new EmpleadoDgv[FindAll(3).Count];
+            EmpleadoDgv[] empleadosDgv = new EmpleadoDgv[empleados.Count];
             int i = 0;
-            foreach (Empleado e in FindAll(3))
+            foreach (Empleado e in empleados)
             {
                 empleadosDgv[i] = GetResumenEmpleado(e.Id, mes);
                 i++;

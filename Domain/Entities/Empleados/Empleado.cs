@@ -23,6 +23,8 @@ namespace Domain.Entities.Empleados
 		public Indemnizacion Indemnizacion { get; set; }
 		public Vacaciones Vacaciones { get; set; }
 		public decimal PagoPendiente { get; set; }
+		//le agregue esta propiedad
+		public int MesesTrabajados { get; set; }
 		public Empleado(string nombreCompleto, Remuneraciones rem, string codINSS, Deducciones deducciones, Aguinaldo aguinaldo, Indemnizacion indemnizacion, Prestamo prestamo, Vacaciones vacaciones)
 		{
 			NombreCompleto = nombreCompleto;
@@ -34,6 +36,8 @@ namespace Domain.Entities.Empleados
 			Indemnizacion = indemnizacion;
 			Prestamo = prestamo;
 			Vacaciones = vacaciones;
+			//agregue esto tambien
+			MesesTrabajados = 1;
 		}
 	}
 }

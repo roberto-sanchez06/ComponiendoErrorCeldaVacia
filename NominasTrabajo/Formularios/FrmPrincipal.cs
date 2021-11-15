@@ -68,31 +68,50 @@ namespace NominasTrabajo
 
         private void guna2DataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (empleadoService.FindAll(1).Count == 0)
+            //agregue el try catch
+            try
             {
-                return;
-            }
-            int id = Convert.ToInt32(guna2DataGridView1.Rows[n].Cells[0].Value);
-            Empleado empleado = empleadoService.GetEmpleadoById(id);
-            if (e.RowIndex >= 0 && nomina == null)
-            {
-                n = e.RowIndex;
-                btnModificar.Visible = true;
-                btnEliminar.Visible = true;
-                if (empleado.Estado == EstadoTrabajador.Inactivo)
+                if (empleadoService.FindAll(1).Count == 0)
                 {
                     return;
                 }
-                if (empleado.Indemnizacion.MesesTrabajadosIndemnizacion > 6)
+                //esta linea la agregue
+                n = e.RowIndex;
+                int id = Convert.ToInt32(guna2DataGridView1.Rows[n].Cells[0].Value);
+                Empleado empleado = empleadoService.GetEmpleadoById(id);
+                if (empleado == null)
                 {
-                    btnPrestamo.Visible = true;
+                    return;
+                }
+                if (e.RowIndex >= 0 && nomina == null)
+                {
+                    n = e.RowIndex;
+                    btnModificar.Visible = true;
+                    btnEliminar.Visible = true;
+                    if (empleado.Estado == EstadoTrabajador.Inactivo)
+                    {
+                        return;
+                    }
+                    //aqui modifique
+                    if (empleado.MesesTrabajados > 6)
+                    {
+                        btnPrestamo.Visible = true;
+                    }
+                    else
+                    {
+                        btnPrestamo.Visible = false;
+                    }
+                }
+                else
+                {
+                    btnModificar.Visible = false;
+                    btnEliminar.Visible = false;
+                    btnPrestamo.Visible = false;
                 }
             }
-            else
+            catch (Exception)
             {
-                btnModificar.Visible = false;
-                btnEliminar.Visible = false;
-                btnPrestamo.Visible = false;
+                return;
             }
         }
 
@@ -184,7 +203,8 @@ namespace NominasTrabajo
             {
                 var a = (guna2DataGridView1.Rows[n].Cells[0].Value);
                 Empleado empleado = empleadoService.GetEmpleadoById((int)a);
-                EmpleadoDgv empleadoDgv = empleadoService.GetResumenEmpleado((int)a, Mes);
+                //comente esta linea
+                //EmpleadoDgv empleadoDgv = empleadoService.GetResumenEmpleado((int)a, Mes);
                 if (empleadoService.Despedir((int)a))
                 {
                     MessageBox.Show("El empleado ha sido despedido correctamente", "MENSAJE", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -252,6 +272,11 @@ namespace NominasTrabajo
             if (empleadoService.GetResumenEmpleados(Mes) != null)
             {
                 btnVerNominas.Visible = true;
+                //agregue estas lineas a continuacion
+                btnEliminar.Visible = false;
+                btnModificar.Visible = false;
+                btnPrestamo.Visible = false;
+
                 Nomina nomina = new Nomina()
                 {
                     Id = nominaService.GetLastId() + 1,
