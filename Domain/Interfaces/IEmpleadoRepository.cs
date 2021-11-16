@@ -21,5 +21,7 @@ namespace Domain.Interfaces
         ICollection<Empleado> FindAll(int tipo);
         Empleado GetEmpleadoById(ICollection<Empleado> empleados, int id);
         void AumentarAntiguedad(Meses meses);
+        //TODO: poner metodo de hacer calculo
+        void RealizarCalculos();
     }
 }

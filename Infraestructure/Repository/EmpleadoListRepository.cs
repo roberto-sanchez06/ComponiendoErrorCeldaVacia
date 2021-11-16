@@ -271,6 +271,11 @@ namespace Infraestructure.EmpleadosRepos
         
         }
 
+        public void RealizarCalculos()
+        {
+            throw new NotImplementedException();
+        }
+
         public int Update(Empleado t,int i)
         {
             if (t is null)

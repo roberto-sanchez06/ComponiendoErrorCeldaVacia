@@ -72,5 +72,10 @@ namespace AppCore.Services
         {
             empleadoRepository.AumentarAntiguedad(meses);
         }
+
+        public void RealizarCalculos()
+        {
+            empleadoRepository.RealizarCalculos();
+        }
     }
 }
