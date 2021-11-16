@@ -68,29 +68,24 @@ namespace NominasTrabajo
 
         private void guna2DataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            //agregue el try catch
             try
             {
-                if (empleadoService.FindAll(1).Count == 0)
-                {
-                    return;
-                }
-                //esta linea la agregue
-                n = e.RowIndex;
-                int id = Convert.ToInt32(guna2DataGridView1.Rows[n].Cells[0].Value);
-                Empleado empleado = empleadoService.GetEmpleadoById(id);
-                if (empleado == null)
-                {
-                    return;
-                }
-                if (e.RowIndex >= 0 && nomina == null)
+                if ((e.RowIndex >= 0 && e.RowIndex < guna2DataGridView1.Rows.Count - 1) && nomina == null)
                 {
                     n = e.RowIndex;
-                    btnModificar.Visible = true;
-                    btnEliminar.Visible = true;
+                    //if (guna2DataGridView1.Rows[n].Cells[0].Value.ToString() == "")
+                    //{
+                    //    throw new ArgumentException();
+                    //}
+                    int id = Convert.ToInt32(guna2DataGridView1.Rows[n].Cells[0].Value);
+                    Empleado empleado = empleadoService.GetEmpleadoById(id);
+                    if (empleado == null)
+                    {
+                        throw new Exception();
+                    }
                     if (empleado.Estado == EstadoTrabajador.Inactivo)
                     {
-                        return;
+                        throw new Exception();
                     }
                     //aqui modifique
                     if (empleado.MesesTrabajados > 6)
@@ -101,16 +96,19 @@ namespace NominasTrabajo
                     {
                         btnPrestamo.Visible = false;
                     }
+                    btnModificar.Visible = true;
+                    btnEliminar.Visible = true;
                 }
                 else
                 {
-                    btnModificar.Visible = false;
-                    btnEliminar.Visible = false;
-                    btnPrestamo.Visible = false;
+                    throw new Exception();
                 }
             }
             catch (Exception)
             {
+                btnModificar.Visible = false;
+                btnEliminar.Visible = false;
+                btnPrestamo.Visible = false;
                 return;
             }
         }

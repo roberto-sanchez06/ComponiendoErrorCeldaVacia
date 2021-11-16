@@ -22,6 +22,5 @@ namespace AppCore.Interfaces
         ICollection<Empleado> FindAll(int tipo);
         Empleado GetEmpleadoById(ICollection<Empleado> empleados, int id);
         void AumentarAntiguedad(Meses meses);
-        void RealizarCalculos();
     }
 }

@@ -18,12 +18,14 @@ namespace Infraestructure.MongoRepository
         private IProcesses processes;
         private IEmpresaService empresaService;
         
-        public EmpleadosMongoRepository() : base("Empleados")
+        public EmpleadosMongoRepository(IProcesses processes, IEmpresaService empresaService) : base("Empleados")
         {
             empleadosDespedidos = db.GetCollection<Empleado>("EmpleadosDespedidos");
             empleadosDespedidos = db.GetCollection<Empleado>("DespedidosDelMes");
+            this.processes = processes;
+            this.empresaService = empresaService;
         }
-        //No creo que funcione este metodo
+        //TODO: No creo que funcione este metodo
         public void AumentarAntiguedad(Meses meses)
         {
             List<Empleado> empleados = (List<Empleado>)FindAll(1);
@@ -66,6 +68,7 @@ namespace Infraestructure.MongoRepository
                 {
                     a.Prestamo.MesesPrestamo -= 1;
                 }
+                Update(a,1);
             }
         }
 
@@ -81,11 +84,11 @@ namespace Infraestructure.MongoRepository
             {
                 throw new ArgumentException($"No se pudo despedir al empleado con id: {id}");
             }
-            bool exitoso = Delete(e);
-            //revisar si se va a actualizar con esta linea
             e.Estado = EstadoTrabajador.Inactivo;
             //esta linea la agregue
             e.MesesTrabajados = 1;
+            Update(e,1);
+            bool exitoso = Delete(e);
             Add(despedidosDelMes, e);
             Add(empleadosDespedidos, e);
             return exitoso;
@@ -148,13 +151,53 @@ namespace Infraestructure.MongoRepository
             {
                 throw new ArgumentException($"No se puede dar un resumen del empleado con id: {id}");
             }
-
-            throw new NotImplementedException();
+            HacerCalculos(e, mes);
+            EmpleadoDgv empleadoDgv = new EmpleadoDgv()
+            {
+                Cargo = e.Cargos,
+                Id = e.Id,
+                Nombre_Completo = e.NombreCompleto,
+                CodigoINSS = e.CodigoINSS,
+                Salario_Mensual = e.Remuneraciones.SalarioBase,
+                Horas_Extras = e.Remuneraciones.HorasExtras,
+                Ingreso_Horas_Extras = e.Remuneraciones.IngresoHorasExtras,
+                INSS_Laboral = e.Deducciones.INSSLaboral,
+                IR = e.Deducciones.IR,
+                //TODO: se usa datos.count es decir los empleados activos, no los que estan en la nomina
+                INSS_Patronal = empresaService.CalculateInssPatronal(e.Remuneraciones.TotalIngresos, FindAll().Count),
+                //TODO: el calculo del INATEC lo tienen todos los empleados
+                INATEC = empresaService.CalculateInatec(SalarioTrabajadores),
+                Cuota_Prestamo = e.Prestamo.Cuota_Prestamo,
+                Vacaciones = e.Vacaciones.VacacionesPago,
+                Estado = e.Estado,
+                Aguinaldo = e.Aguinaldo.AguinaldoPago,
+                Indemnizacion = e.Indemnizacion.IndemnizacionPago
+            };
+            empleadoDgv.Neto_A_Recibir = empleadoDgv.Total_Ingresos - empleadoDgv.Total_Deducciones + empleadoDgv.Vacaciones + empleadoDgv.Indemnizacion + empleadoDgv.Aguinaldo - e.PagoPendiente;
+            if (empleadoDgv.Neto_A_Recibir < 0)
+            {
+                e.PagoPendiente = Math.Abs(empleadoDgv.Neto_A_Recibir);
+                empleadoDgv.Neto_A_Recibir = 0;
+            }
+            return empleadoDgv;
         }
 
         public EmpleadoDgv[] GetResumenEmpleados(int mes)
         {
-            throw new NotImplementedException();
+            //TODO: modifique todos los findAll sueltos y los almacene en empleados
+            var empleados = FindAll(3);
+            if (empleados.Count == 0)
+            {
+                return null;
+            }
+            EmpleadoDgv[] empleadosDgv = new EmpleadoDgv[empleados.Count];
+            int i = 0;
+            foreach (Empleado e in empleados)
+            {
+                empleadosDgv[i] = GetResumenEmpleado(e.Id, mes);
+                i++;
+            }
+            return empleadosDgv;
         }
 
         public void QuitarDespedidos(Empleado empleado, int i)
@@ -214,13 +257,34 @@ namespace Infraestructure.MongoRepository
         }
         public override int GetLastId()
         {
-            int i= base.GetLastId();
-            return i + 3;
+            int idActivos= base.GetLastId();
+            int idDespedidos;
+            var datos = FindAll().ToList();
+            if (datos.Count == 0)
+            {
+                return 0;
+            }
+            else
+            {
+                try
+                {
+                    idDespedidos= (int)datos[datos.Count - 1].GetType().GetProperty("Id").GetValue(datos[datos.Count - 1]);
+                }
+                catch (Exception)
+                {
+                    throw new ArgumentException("El objeto no posee la propiedad Id");
+                }
+            }
+            return (idActivos > idDespedidos) ? idActivos : idDespedidos;
         }
         //metodo para que entre con todos los datos calculados a la base de datos,
         //probar si se tiene que pasar por referencia el empleado
         private void HacerCalculos(Empleado e, int mes)
         {
+            if (e == null)
+            {
+                throw new ArgumentException($"El empleado es nulo");
+            }
             e.Remuneraciones.TotalIngresos = e.Remuneraciones.SalarioBase + processes.CalculateHorasExtras(e.Remuneraciones.HorasExtras, e.Remuneraciones.SalarioBase);
             e.Deducciones.INSSLaboral = processes.CalculateInss(e.Remuneraciones.TotalIngresos);
             e.Deducciones.IR = processes.CalculateIR(e.Remuneraciones.SalarioBase);
@@ -284,11 +348,6 @@ namespace Infraestructure.MongoRepository
             {
                 throw new ArgumentException($"No se ha podido actualizar al empleado con Id {e.Id}");
             }
-        }
-
-        public void RealizarCalculos()
-        {
-            throw new NotImplementedException();
         }
     }
 }

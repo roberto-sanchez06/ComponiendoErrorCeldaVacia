@@ -8,6 +8,7 @@ using AppCore.Services;
 using Autofac;
 using Domain.Interfaces;
 using Infraestructure.EmpleadosRepos;
+using Infraestructure.MongoRepository;
 using Infraestructure.Repository;
 using NominasTrabajo.Formularios;
 
@@ -23,19 +24,25 @@ namespace NominasTrabajo
 		{
 			var builder = new ContainerBuilder();
 
-			builder.RegisterType<EmpleadoListRepository>().As<IEmpleadoRepository>();
-			builder.RegisterType<EmpleadoService>().As<IEmpleadoService>();
+            //builder.RegisterType<EmpleadoListRepository>().As<IEmpleadoRepository>();
+            //builder.RegisterType<EmpleadoService>().As<IEmpleadoService>();
 
-			builder.RegisterType<ProcessesEmpleadosRepository>().As<IProcessesEmpleado>();
+            builder.RegisterType<EmpleadosMongoRepository>().As<IEmpleadoRepository>();
+            builder.RegisterType<EmpleadoService>().As<IEmpleadoService>();
+
+            builder.RegisterType<ProcessesEmpleadosRepository>().As<IProcessesEmpleado>();
 			builder.RegisterType<ProcessesEmpleadoServices>().As<IProcesses>();
 
 			builder.RegisterType<ProcessesEmpresaRepository>().As<IProcessesEmpresa>();
 			builder.RegisterType<ProcessesEmpresaServices>().As<IEmpresaService>();
 
-			builder.RegisterType<NominaRepository>().As<INominaRepository>();
-			builder.RegisterType<NominaService>().As<INominaService>();
+            //builder.RegisterType<NominaRepository>().As<INominaRepository>();
+            //builder.RegisterType<NominaService>().As<INominaService>();
 
-			var container = builder.Build();
+            builder.RegisterType<NominaMongoRepository>().As<INominaRepository>();
+            builder.RegisterType<NominaService>().As<INominaService>();
+
+            var container = builder.Build();
 
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
