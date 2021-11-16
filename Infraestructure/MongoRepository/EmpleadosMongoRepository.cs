@@ -21,7 +21,7 @@ namespace Infraestructure.MongoRepository
         public EmpleadosMongoRepository(IProcesses processes, IEmpresaService empresaService) : base("Empleados")
         {
             empleadosDespedidos = db.GetCollection<Empleado>("EmpleadosDespedidos");
-            empleadosDespedidos = db.GetCollection<Empleado>("DespedidosDelMes");
+            despedidosDelMes = db.GetCollection<Empleado>("DespedidosDelMes");
             this.processes = processes;
             this.empresaService = empresaService;
         }
@@ -104,7 +104,7 @@ namespace Infraestructure.MongoRepository
                     return empleadosDespedidos.Find(x=>true).ToList(); 
                 case 3:
                     List<Empleado> temp = new List<Empleado>(FindAll());
-                    temp.AddRange(FindAll(2));
+                    temp.AddRange(FindAll(4));
                     //Con la siguiente linea ya se ponen ordenados
                     ICollection<Empleado> temp2=temp.OrderBy(x => x.Id).ToList();
                     return temp2;
@@ -217,7 +217,10 @@ namespace Infraestructure.MongoRepository
 
         public void QuitarDespedidosDelMes()
         {
-            despedidosDelMes.DeleteMany(x=>true);
+            if (FindAll(4).Count>0)
+            {
+                despedidosDelMes.DeleteMany(x => true); 
+            }
         }
         //Se puede hacer void el Update
         public int Update(Empleado t, int i)
@@ -259,10 +262,10 @@ namespace Infraestructure.MongoRepository
         {
             int idActivos= base.GetLastId();
             int idDespedidos;
-            var datos = FindAll().ToList();
+            var datos = FindAll(2).ToList();
             if (datos.Count == 0)
             {
-                return 0;
+                idDespedidos= 0;
             }
             else
             {
